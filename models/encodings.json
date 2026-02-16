@@ -1,0 +1,45 @@
+{
+  "soil_types": [
+    "Alluvial",
+    "Black",
+    "Clay",
+    "Loamy",
+    "Red",
+    "Sandy"
+  ],
+  "seasons": [
+    "Kharif",
+    "Monsoon",
+    "Rabi",
+    "Summer",
+    "Winter"
+  ],
+  "regions": [
+    "Central",
+    "East",
+    "North",
+    "Northeast",
+    "South",
+    "West"
+  ],
+  "crops": [
+    "Barley",
+    "Coffee",
+    "Cotton",
+    "Groundnut",
+    "Jute",
+    "Maize",
+    "Millets",
+    "Onion",
+    "Potato",
+    "Pulses",
+    "Rice",
+    "Soybean",
+    "Sugarcane",
+    "Sunflower",
+    "Tea",
+    "Tobacco",
+    "Tomato",
+    "Wheat"
+  ]
+}

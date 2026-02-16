@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}AI Agricultural Assistant - AgriPredictor AI{% endblock %}
+
+{% block content %}
+<div class="container animate-fade">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="glass-card stat-widget mb-4">
+                <h2 class="mb-2"><i class="fas fa-robot text-success"></i> AI Agricultural Assistant</h2>
+                <p class="text-muted">Ask anything about crop management, soil health, or pest control. Powered by RAG &
+                    Local AI.</p>
+            </div>
+
+            <div class="glass-card mb-4">
+                <div class="chat-container d-flex flex-column" id="chatWindow">
+                    <div class="chat-bubble bot">
+                        Hello! I'm your AI farming expert. How can I help you optimize your yield today?
+                    </div>
+                </div>
+
+                <div class="p-3 border-top">
+                    <form id="chatForm" class="d-flex gap-2">
+                        <input type="text" id="userInput" class="form-control rounded-pill px-4"
+                            placeholder="Ask about NPK ratios, irrigation, or crop diseases..." required>
+                        <button type="submit" class="btn btn-premium rounded-circle" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="glass-card p-4">
+                <h5><i class="fas fa-lightbulb text-warning"></i> Try asking:</h5>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button class="btn btn-sm btn-outline-success rounded-pill suggestion-btn">Best NPK for
+                        Rice?</button>
+                    <button class="btn btn-sm btn-outline-success rounded-pill suggestion-btn">Drought resistant
+                        crops</button>
+                    <button class="btn btn-sm btn-outline-success rounded-pill suggestion-btn">How to save water in
+                        Cotton?</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const chatForm = document.getElementById('chatForm');
+    const chatWindow = document.getElementById('chatWindow');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function appendMessage(text, side) {
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${side} animate-fade`;
+        bubble.innerText = text;
+        chatWindow.appendChild(bubble);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    chatForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const query = userInput.value.trim();
+        if (!query) return;
+
+        appendMessage(query, 'user');
+        userInput.value = '';
+
+        // Show typing indicator
+        const typing = document.createElement('div');
+        typing.className = 'chat-bubble bot text-muted small italic';
+        typing.innerText = 'AI is thinking...';
+        chatWindow.appendChild(typing);
+
+        try {
+            const response = await fetch('/chatbot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `query=${encodeURIComponent(query)}`
+            });
+            const data = await response.json();
+            chatWindow.removeChild(typing);
+            appendMessage(data.response, 'bot');
+        } catch (err) {
+            chatWindow.removeChild(typing);
+            appendMessage("Sorry, I encountered an error. Please try again later.", 'bot');
+        }
+    };
+
+    document.querySelectorAll('.suggestion-btn').forEach(btn => {
+        btn.onclick = () => {
+            userInput.value = btn.innerText;
+            chatForm.dispatchEvent(new Event('submit'));
+        };
+    });
+</script>
+{% endblock %}

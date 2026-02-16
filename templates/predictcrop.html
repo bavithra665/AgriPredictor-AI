@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Predict Crop - AgriPredictor AI{% endblock %}
+
+{% block content %}
+<div class="container animate-fade">
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6">
+            <h1 class="fw-bold"><i class="fas fa-microscope text-success"></i> Crop Prediction <span
+                    class="text-gold">Engine</span></h1>
+            <p class="lead text-muted">Input your soil and environmental parameters to get AI-optimized crop
+                recommendations with climate risk adjustment.</p>
+        </div>
+        <div class="col-lg-6 text-lg-end">
+            <div class="glass-card d-inline-block px-4 py-2 border-success border-start border-4">
+                <small class="text-uppercase fw-bold text-muted d-block">System Status</small>
+                <span class="text-success"><i class="fas fa-circle small"></i> Models Active</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Input Form -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4">
+                <form action="{{ url_for('predictcrop') }}" method="POST">
+                    <h5 class="fw-bold mb-4 border-bottom pb-2">Soil Nutrients</h5>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nitrogen (N)</label>
+                        <input type="number" step="0.01" name="n" class="form-control" placeholder="Ratio 0-140"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Phosphorus (P)</label>
+                        <input type="number" step="0.01" name="p" class="form-control" placeholder="Ratio 5-145"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Potassium (K)</label>
+                        <input type="number" step="0.01" name="k" class="form-control" placeholder="Ratio 5-205"
+                            required>
+                    </div>
+
+                    <h5 class="fw-bold my-4 border-bottom pb-2">Climate & Soil</h5>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Temperature (°C)</label>
+                        <input type="number" step="0.01" name="temperature" class="form-control" placeholder="e.g. 25.5"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Humidity (%)</label>
+                        <input type="number" step="0.01" name="humidity" class="form-control" placeholder="e.g. 80"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Soil pH</label>
+                        <input type="number" step="0.01" name="ph" class="form-control" placeholder="e.g. 6.5" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Rainfall (mm)</label>
+                        <input type="number" step="0.01" name="rainfall" class="form-control" placeholder="e.g. 200"
+                            required>
+                    </div>
+
+                    <h5 class="fw-bold my-4 border-bottom pb-2">Geography</h5>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Soil Type</label>
+                        <select name="soil_type" class="form-select" required>
+                            {% for type in soil_types %}
+                            <option value="{{ type }}">{{ type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Season</label>
+                        <select name="season" class="form-select" required>
+                            {% for season in seasons %}
+                            <option value="{{ season }}">{{ season }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Region</label>
+                        <select name="region" class="form-select" required>
+                            {% for region in regions %}
+                            <option value="{{ region }}">{{ region }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-premium w-100 mt-3">Run AI Analysis</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Display -->
+        <div class="col-lg-8" id="results">
+            {% if show_results %}
+            <!-- Climate Risk Header -->
+            <div class="glass-card p-4 mb-4 border-bottom border-success border-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h4 class="fw-bold mb-0">Climate Risk Intelligence</h4>
+                        <p class="text-muted small">Real-time risk scoring for your location</p>
+                    </div>
+                    <div class="col-md-3 text-center border-end">
+                        <div class="risk-{{ 'high' if risk_data.drought_risk > 60 else 'low' }} fw-bold h4 mb-0">
+                            {{ risk_data.drought_risk }}%
+                        </div>
+                        <small class="text-uppercase text-muted">Drought Risk</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="risk-{{ 'high' if risk_data.flood_risk > 60 else 'low' }} fw-bold h4 mb-0">
+                            {{ risk_data.flood_risk }}%
+                        </div>
+                        <small class="text-uppercase text-muted">Flood Risk</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                {% for crop in predictions %}
+                <div class="col-12">
+                    <div class="glass-card p-4 crop-result-card animate-fade" style="--order: {{ loop.index }}">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <img src="{{ url_for('static', filename='images/' + crop.image) }}"
+                                    class="rounded-circle shadow-sm"
+                                    style="width: 80px; height: 80px; object-fit: cover;">
+                            </div>
+                            <div class="col-md-10">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h3 class="fw-bold text-success mb-0">{{ crop.name }}</h3>
+                                        <div class="badge confidence-badge mt-1">{{ crop.confidence }}% Base Confidence
+                                        </div>
+                                        <div class="badge bg-warning text-dark mt-1">Risk-Adjusted: {{
+                                            crop.risk_adjusted_confidence }}%</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="text-muted small">Rank #{{ loop.index }}</span>
+                                    </div>
+                                </div>
+                                <div class="row g-3 mt-1">
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block">Planting Time</small>
+                                        <span class="fw-bold small">{{ crop.planting }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block">Irrigation</small>
+                                        <span class="fw-bold small">{{ crop.irrigation }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block">Fertilizer</small>
+                                        <span class="fw-bold small">{{ crop.fertilizer }}</span>
+                                    </div>
+                                    <div class="col-md-3 text-md-end">
+                                        <a href="{{ url_for('chatbot') }}" class="btn btn-sm btn-outline-success">Ask
+                                            Expert <i class="fas fa-chevron-right ms-1"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div
+                class="glass-card stat-widget h-100 d-flex flex-column justify-content-center align-items-center opacity-75">
+                <i class="fas fa-seedling fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">Awaiting Input Parameters</h4>
+                <p class="text-muted px-5">Enter your soil and climatic data on the left to generate advanced decision
+                    intelligence.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

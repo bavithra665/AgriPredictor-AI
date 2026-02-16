@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Home - AgriPredictor AI Intelligence{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="container-fluid px-0">
+    <div class="hero-section text-center py-5 mb-5 glass-card mx-2 mx-md-5 rounded-bottom-5 glass-card">
+        <div class="container py-5 animate-fade">
+            <h1 class="display-3 fw-bold mb-3">Sustainable Farming through <span class="text-gold">Decision
+                    Intelligence</span></h1>
+            <p class="lead mb-5 px-lg-5 opacity-75">Harness the power of Random Forest ML, RAG-driven AI Assistants, and
+                Climate Risk Analytics to optimize your crop yield and minimize environmental risk.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('register') }}" class="btn btn-premium btn-lg px-5 shadow">Get Started</a>
+                <a href="{{ url_for('about') }}" class="btn btn-outline-dark btn-lg px-5 rounded-pill shadow-sm">Learn
+                    More</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <!-- Value Propositions -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="glass-card p-5 stat-widget h-100 text-center">
+                <div class="mb-4 d-inline-block p-4 rounded-circle bg-success bg-opacity-10">
+                    <i class="fas fa-brain fa-2x text-success"></i>
+                </div>
+                <h4 class="fw-bold">Predictive ML</h4>
+                <p class="text-muted">High-precision Random Forest model analyzing 10+ soil and weather parameters for
+                    optimal crop selection.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-5 stat-widget h-100 text-center">
+                <div class="mb-4 d-inline-block p-4 rounded-circle bg-primary bg-opacity-10">
+                    <i class="fas fa-robot fa-2x text-primary"></i>
+                </div>
+                <h4 class="fw-bold">AI RAG Assistant</h4>
+                <p class="text-muted">Chat with our agricultural specialized LLM that retrieves real-time context from
+                    vast farming knowledge bases.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-5 stat-widget h-100 text-center">
+                <div class="mb-4 d-inline-block p-4 rounded-circle bg-warning bg-opacity-10">
+                    <i class="fas fa-cloud-sun-rain fa-2x text-warning"></i>
+                </div>
+                <h4 class="fw-bold">Climate Intelligence</h4>
+                <p class="text-muted">Real-time weather integration to calculate flood and drought risk scores,
+                    adjusting recommendations for safety.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="glass-card my-5 p-5 text-center">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="h2 fw-bold text-success">98%</div>
+                <div class="text-muted small text-uppercase fw-bold">Model Accuracy</div>
+            </div>
+            <div class="col-md-3">
+                <div class="h2 fw-bold text-success">12+</div>
+                <div class="text-muted small text-uppercase fw-bold">Crop Categories</div>
+            </div>
+            <div class="col-md-3">
+                <div class="h2 fw-bold text-success">1.5s</div>
+                <div class="text-muted small text-uppercase fw-bold">Inference Speed</div>
+            </div>
+            <div class="col-md-3">
+                <div class="h2 fw-bold text-success">24/7</div>
+                <div class="text-muted small text-uppercase fw-bold">Expert Support</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

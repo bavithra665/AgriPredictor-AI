@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgriPredictor AI - Intelligence Platform{% endblock %}</title>
+    <!-- Modern Typography & UI Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <i class="fas fa-microchip"></i> AgriPredictor<span class="text-gold">AI</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active fw-bold' if request.endpoint == 'home' else '' }}"
+                            href="{{ url_for('home') }}">Home</a>
+                    </li>
+                    {% if session.user_id %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active fw-bold' if request.endpoint == 'predictcrop' else '' }}"
+                            href="{{ url_for('predictcrop') }}">Predictor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active fw-bold' if request.endpoint == 'chatbot' else '' }}"
+                            href="{{ url_for('chatbot') }}">AI Assistant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active fw-bold' if request.endpoint == 'dashboard' else '' }}"
+                            href="{{ url_for('dashboard') }}">Analytics</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active fw-bold' if request.endpoint == 'about' else '' }}"
+                            href="{{ url_for('about') }}">About</a>
+                    </li>
+                    {% if session.user_id %}
+                    <li class="nav-item dropdown ms-lg-3">
+                        <a class="btn btn-outline-light btn-sm px-3 rounded-pill" href="{{ url_for('logout') }}">
+                            Logout <i class="fas fa-sign-out-alt ms-1"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-premium btn-sm" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category != 'danger' else 'danger' }} alert-dismissible fade show glass-card border-0"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <main class="py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="text-dark py-5 mt-5">
+        <div class="container text-center">
+            <div class="mb-4">
+                <i class="fas fa-seedling fa-2x text-success"></i>
+            </div>
+            <p class="text-muted small">&copy; 2026 AgriPredictor AI Intelligence. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#" class="text-muted mx-2"><i class="fab fa-github"></i></a>
+                <a href="#" class="text-muted mx-2"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

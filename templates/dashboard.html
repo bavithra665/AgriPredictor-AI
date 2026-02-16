@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block title %}Decision Dashboard - AgriPredictor AI{% endblock %}
+
+{% block content %}
+<div class="container animate-fade">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-1">Intelligence Dashboard</h2>
+                    <p class="text-muted mb-0">Welcome back, {{ session.user_name }}. Here's your agricultural analytics
+                        overview.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('predictcrop') }}" class="btn btn-premium">New Prediction <i
+                            class="fas fa-plus ms-2"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card stat-widget text-center p-4">
+                <div class="text-muted small mb-1 text-uppercase fw-bold">Total Recommendations</div>
+                <div class="stat-value h2 fw-bold text-success">{{ total_recommendations }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card stat-widget text-center p-4">
+                <div class="text-muted small mb-1 text-uppercase fw-bold">Primary Suggestion</div>
+                <div class="stat-value text-success fw-bold" style="font-size: 1.5rem;">
+                    {% if predictions %}
+                    {{ predictions[0].crop1 }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card stat-widget text-center p-4">
+                <div class="text-muted small mb-1 text-uppercase fw-bold">Avg Confidence</div>
+                <div class="stat-value h2 fw-bold">
+                    {{ avg_confidence }}%
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card stat-widget text-center p-4">
+                <div class="text-muted small mb-1 text-uppercase fw-bold">Risk Level</div>
+                <div class="stat-value {{ risk_class }} fw-bold" style="font-size: 1.5rem;">{{ risk_level }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold mb-4"><i class="fas fa-chart-pie me-2 text-success"></i> Recommended Crops
+                    Distribution</h5>
+                <canvas id="distChart" height="250" aria-label="Crop Distribution Chart">Your browser does not support
+                    the canvas element.</canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold mb-4"><i class="fas fa-chart-line me-2 text-primary"></i> Prediction Activity Trend
+                </h5>
+                <canvas id="trendChart" height="250" aria-label="Prediction Activity Chart">Your browser does not
+                    support the canvas element.</canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h5 class="fw-bold mb-4"><i class="fas fa-balance-scale me-2 text-gold"></i> Decision Intelligence Bar
+                    Chart</h5>
+                <canvas id="comparisonChart" height="150" aria-label="Comparison Chart">Your browser does not support
+                    the canvas element.</canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h4 class="fw-bold mb-4">Detailed Prediction History</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border-0">
+                        <thead class="text-muted small text-uppercase">
+                            <tr>
+                                <th>Date</th>
+                                <th>Conditions (NPK)</th>
+                                <th>Top Recommendation</th>
+                                <th>Confidence</th>
+                                <th>Drought Risk</th>
+                                <th>Flood Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pred in predictions %}
+                            {% set d_risk = pred.drought_risk|default(0) %}
+                            {% set f_risk = pred.flood_risk|default(0) %}
+
+                            {% set d_class = "text-warning" %}
+                            {% if d_risk > 60 %}
+                            {% set d_class = "text-danger" %}
+                            {% elif d_risk < 30 %} {% set d_class="text-success" %} {% endif %} {% set
+                                f_class="text-warning" %} {% if f_risk> 60 %}
+                                {% set f_class = "text-danger" %}
+                                {% elif f_risk < 30 %} {% set f_class="text-success" %} {% endif %} <tr>
+                                    <td class="text-muted small">
+                                        {{ pred.created_at.strftime('%b %d, %Y') if pred.created_at else 'N/A' }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark fw-normal">
+                                            {{ pred.n|int }} : {{ pred.p|int }} : {{ pred.k|int }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold text-success">{{ pred.crop1 }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 6px; width: 80px;">
+                                            <div class="progress-bar bg-success js-progress-bar"
+                                                data-width="{{ pred.confidence1 }}"></div>
+                                        </div>
+                                        <small class="text-muted">{{ pred.confidence1 }}%</small>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold {{ d_class }}">
+                                            {{ d_risk|round(1) }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold {{ f_class }}">
+                                            {{ f_risk|round(1) }}%
+                                        </span>
+                                    </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            No data available yet. Start by predicting your first crop!
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Safe Data Container -->
+<div id="data-host" data-dist="{{ dist_data | tojson | forceescape }}"
+    data-trend="{{ trend_data | tojson | forceescape }}" data-comp="{{ comparison_data | tojson | forceescape }}"
+    style="display: none;">
+</div>
+
+<script>
+    (function () {
+        var host = document.getElementById('data-host');
+        if (!host) { return; }
+
+        // Load progress bars
+        var bars = document.querySelectorAll('.js-progress-bar');
+        for (var i = 0; i < bars.length; i++) {
+            bars[i].style.width = bars[i].getAttribute('data-width') + '%';
+        }
+
+        // Helper to parse data
+        function getAnalytics(attr) {
+            try { return JSON.parse(host.getAttribute(attr)); }
+            catch (e) { return null; }
+        }
+
+        var dist = getAnalytics('data-dist');
+        var trend = getAnalytics('data-trend');
+        var comp = getAnalytics('data-comp');
+
+        // Distribution Chart
+        if (dist && dist.labels && dist.labels.length > 0) {
+            new Chart(document.getElementById('distChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: dist.labels,
+                    datasets: [{
+                        data: dist.counts,
+                        backgroundColor: ['#198754', '#0F5132', '#A3CFBB', '#FFD700', '#20c997', '#FF5722', '#3F51B5'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        // Trend Chart - Modern Bar Chart
+        if (trend && trend.labels && trend.labels.length > 0) {
+            var ctx = document.getElementById('trendChart').getContext('2d');
+            var gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(25, 135, 84, 0.9)');
+            gradient.addColorStop(1, 'rgba(25, 135, 84, 0.3)');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: trend.labels,
+                    datasets: [{
+                        label: 'Predictions',
+                        data: trend.values,
+                        backgroundColor: gradient,
+                        borderColor: '#198754',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function (context) {
+                                    return 'Predictions: ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: 11 }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Comparison Chart
+        if (comp) {
+            var keys = Object.keys(comp);
+            if (keys.length > 0) {
+                new Chart(document.getElementById('comparisonChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: keys,
+                        datasets: [
+                            {
+                                label: 'Profitability (%)',
+                                data: keys.map(function (k) { return comp[k].profit; }),
+                                backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                                borderRadius: 8
+                            },
+                            {
+                                label: 'Water Usage (%)',
+                                data: keys.map(function (k) { return comp[k].water; }),
+                                backgroundColor: 'rgba(33, 150, 243, 0.7)',
+                                borderRadius: 8
+                            },
+                            {
+                                label: 'Resource Risk (%)',
+                                data: keys.map(function (k) { return comp[k].risk; }),
+                                backgroundColor: 'rgba(255, 87, 34, 0.7)',
+                                borderRadius: 8
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true, max: 100 } }
+                    }
+                });
+            }
+        }
+    })();
+</script>
+{% endblock %}
