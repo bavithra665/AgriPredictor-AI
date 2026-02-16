@@ -78,22 +78,33 @@ def get_model_bundle():
     
     # If we already tried and failed, return empty dict (prevents retry loop)
     if _model_load_attempted and not _model_bundle:
+        print("⚠️ Model load was already attempted and failed")
         return {}
         
     # Try to load
     _model_load_attempted = True
     try:
-        print("⏳ Loading ML Model...")
+        print("⏳ Loading ML Model (memory-efficient mode)...")
         import joblib
+        import gc
+        
         model_path = os.path.join(os.path.dirname(__file__), 'models/crop_model.pkl')
         
         if not os.path.exists(model_path):
             print(f"❌ Model file not found: {model_path}")
             return {}
         
-        _model_bundle = joblib.load(model_path)
-        print("✅ ML Model loaded successfully")
+        # Force garbage collection before loading
+        gc.collect()
+        
+        # Load with memory mapping to reduce RAM usage
+        _model_bundle = joblib.load(model_path, mmap_mode='r')
+        print("✅ ML Model loaded successfully (memory-mapped)")
         return _model_bundle
+    except MemoryError as e:
+        print(f"❌ Out of memory loading model: {e}")
+        print("💡 Render free tier may not have enough RAM for this model")
+        return {}
     except Exception as e:
         print(f"❌ Model load failed: {e}")
         import traceback
@@ -425,15 +436,15 @@ def predictcrop():
             season_classes = bundle['le_season'].classes_.tolist()
             region_classes = bundle['le_region'].classes_.tolist()
         except:
-             # Fallback if specific attributes are missing or numpy issues
+             # Fallback - MUST match the actual trained model classes
             soil_classes = ['Alluvial', 'Black', 'Clayey', 'Loamy', 'Red', 'Sandy']
-            season_classes = ['Kharif', 'Rabi', 'Zaid']
-            region_classes = ['North', 'South', 'East', 'West', 'Central']
+            season_classes = ['Kharif', 'Monsoon', 'Rabi', 'Summer', 'Winter', 'Whole Year']
+            region_classes = ['Central', 'East', 'Northeast', 'South', 'West']
     else:
-        # Absolute fallback if bundle load fails
+        # Absolute fallback - MUST match the actual trained model classes
         soil_classes = ['Alluvial', 'Black', 'Clayey', 'Loamy', 'Red', 'Sandy']
-        season_classes = ['Kharif', 'Rabi', 'Zaid']
-        region_classes = ['North', 'South', 'East', 'West', 'Central']
+        season_classes = ['Kharif', 'Monsoon', 'Rabi', 'Summer', 'Winter', 'Whole Year']
+        region_classes = ['Central', 'East', 'Northeast', 'South', 'West']
 
     if last_pred:
         # Reconstruct crop objects for display
