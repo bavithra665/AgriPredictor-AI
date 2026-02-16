@@ -67,18 +67,46 @@ def get_analytics_engine():
 
 # ---------------- ML Model Getter ----------------
 _model_bundle = None
+_model_loading = False
+import threading
+model_lock = threading.Lock()
 
 def get_model_bundle():
-    global _model_bundle
-    if _model_bundle is None:
+    global _model_bundle, _model_loading
+    
+    # If already loaded, return immediately
+    if _model_bundle is not None:
+        return _model_bundle
+        
+    # If currently loading, return None to signal "warming up"
+    if _model_loading:
+        return None
+
+    # Thread-safe loading
+    with model_lock:
+        # Check again in case another thread finished while we waited
+        if _model_bundle is not None:
+            return _model_bundle
+            
+        _model_loading = True
         try:
+            print("⏳ Starting ML Model Load...")
             import joblib
             model_path = os.path.join(os.path.dirname(__file__), 'models/crop_model.pkl')
+            
+            if not os.path.exists(model_path):
+                print(f"❌ ERROR: Model file not found at {model_path}")
+                _model_bundle = {} # prevent retry loop
+                return {}
+
             _model_bundle = joblib.load(model_path)
             print("✅ ML Model loaded successfully")
         except Exception as e:
             print(f"❌ CRITICAL: ML Model failed to load: {e}")
-            _model_bundle = {}
+            _model_bundle = {} # prevent retry loop
+        finally:
+            _model_loading = False
+            
     return _model_bundle
 
 # ---------------- MongoDB Connection Getter ----------------
