@@ -27,28 +27,40 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# ---------------- Engine Initializations ----------------
-# Wrap in try-except to prevent deployment crashes
-try:
-    risk_engine = ClimateRiskEngine()
-    print("✅ Climate Risk Engine initialized")
-except Exception as e:
-    print(f"⚠️ Climate Risk Engine failed: {e}")
-    risk_engine = None
+# ---------------- Global Engine Holders ----------------
+_risk_engine = None
+_agri_bot = None
+_analytics_engine = None
 
-try:
-    agri_bot = AgriBot()
-    print("✅ AgriBot initialized")
-except Exception as e:
-    print(f"⚠️ AgriBot failed: {e}")
-    agri_bot = None
+def get_risk_engine():
+    global _risk_engine
+    if _risk_engine is None:
+        try:
+            _risk_engine = ClimateRiskEngine()
+            print("✅ Climate Risk Engine initialized")
+        except Exception as e:
+            print(f"⚠️ Climate Risk Engine failed: {e}")
+    return _risk_engine
 
-try:
-    analytics_engine = AnalyticsEngine()
-    print("✅ Analytics Engine initialized")
-except Exception as e:
-    print(f"⚠️ Analytics Engine failed: {e}")
-    analytics_engine = None
+def get_agri_bot():
+    global _agri_bot
+    if _agri_bot is None:
+        try:
+            _agri_bot = AgriBot()
+            print("✅ AgriBot initialized")
+        except Exception as e:
+            print(f"⚠️ AgriBot failed: {e}")
+    return _agri_bot
+
+def get_analytics_engine():
+    global _analytics_engine
+    if _analytics_engine is None:
+        try:
+            _analytics_engine = AnalyticsEngine()
+            print("✅ Analytics Engine initialized")
+        except Exception as e:
+            print(f"⚠️ Analytics Engine failed: {e}")
+    return _analytics_engine
 
 # ---------------- MongoDB Connection ----------------
 try:
@@ -284,7 +296,10 @@ def predictcrop():
 
             # --- New: Climate Risk Adjusted Recommendations ---
             user_location = user.location if user and user.location else "Unknown"
-            risk_data = risk_engine.calculate_risk_scores(user_location, rainfall, temperature)
+            risk_data = None
+            risk_engine = get_risk_engine()
+            if risk_engine:
+                risk_data = risk_engine.calculate_risk_scores(user_location, rainfall, temperature)
             
             # Add these fallbacks to ensure dictionary keys exist even if weather API fails
             if not risk_data or 'drought_risk' not in risk_data:
@@ -388,7 +403,11 @@ def chatbot():
     
     if request.method == 'POST':
         user_query = request.form.get('query')
-        response = agri_bot.get_answer(user_query)
+        bot = get_agri_bot()
+        if bot:
+            response = bot.get_answer(user_query)
+        else:
+            response = "I'm currently warming up my AI systems. Please try again in a minute!"
         return jsonify({'response': response})
         
     return render_template('chatbot.html')
@@ -402,9 +421,12 @@ def dashboard():
     user_preds = Prediction.query.filter_by(user_id=session['user_id']).all()
     
     # Process analytics
-    dist_data = analytics_engine.process_prediction_history(user_preds)
-    trend_data = analytics_engine.get_trend_data(user_preds)
-    comparison_data = analytics_engine.get_crop_comparison_data(user_preds)
+    dist_data = trend_data = comparison_data = []
+    engine = get_analytics_engine()
+    if engine:
+        dist_data = engine.process_prediction_history(user_preds)
+        trend_data = engine.get_trend_data(user_preds)
+        comparison_data = engine.get_crop_comparison_data(user_preds)
     
     # Calculate Dashboard Stats
     avg_confidence = 0
