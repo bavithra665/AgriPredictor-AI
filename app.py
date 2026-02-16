@@ -548,12 +548,20 @@ def chatbot():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
-        user_query = request.form.get('query')
-        bot = get_agri_bot()
-        if bot:
-            response = bot.get_answer(user_query)
-        else:
-            response = "I'm currently warming up my AI systems. Please try again in a minute!"
+        user_query = request.form.get('query', '')
+        if not user_query:
+            return jsonify({'response': "Please enter a question!"})
+
+        try:
+            bot = get_agri_bot()
+            if bot:
+                response = bot.get_answer(user_query)
+            else:
+                response = "I'm currently warming up my AI systems. Please try again in a minute!"
+        except Exception as e:
+            print(f"❌ Chatbot Route Error: {e}")
+            response = "I'm having a bit of trouble connecting to my brain right now. Please try again in a few seconds!"
+            
         return jsonify({'response': response})
         
     return render_template('chatbot.html')
