@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT --timeout 120 --log-level debug wsgi:app
+web: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0 --no-preload wsgi:app
