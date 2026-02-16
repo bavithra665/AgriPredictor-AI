@@ -28,29 +28,53 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # ---------------- Engine Initializations ----------------
-risk_engine = ClimateRiskEngine()
-agri_bot = AgriBot()
-analytics_engine = AnalyticsEngine()
+# Wrap in try-except to prevent deployment crashes
+try:
+    risk_engine = ClimateRiskEngine()
+    print("✅ Climate Risk Engine initialized")
+except Exception as e:
+    print(f"⚠️ Climate Risk Engine failed: {e}")
+    risk_engine = None
+
+try:
+    agri_bot = AgriBot()
+    print("✅ AgriBot initialized")
+except Exception as e:
+    print(f"⚠️ AgriBot failed: {e}")
+    agri_bot = None
+
+try:
+    analytics_engine = AnalyticsEngine()
+    print("✅ Analytics Engine initialized")
+except Exception as e:
+    print(f"⚠️ Analytics Engine failed: {e}")
+    analytics_engine = None
 
 # ---------------- MongoDB Connection ----------------
 try:
     mongo_uri = os.environ.get('MONGODB_URI', "mongodb://localhost:27017")
-    mongo_client = MongoClient(mongo_uri)
+    mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
     mongo_db = mongo_client["agri_predictor_db"]
     crop_collection = mongo_db["crops"]
     print("✅ MongoDB connected!")
 except Exception as e:
-    print("❌ MongoDB connection error:", e)
+    print("⚠️ MongoDB connection error:", e)
     crop_collection = None
 
 # ---------------- ML Model ----------------
-model_data = joblib.load('models/crop_model.pkl')
-model = model_data['model']
-le_soil = model_data['le_soil']
-le_season = model_data['le_season']
-le_region = model_data['le_region']
-le_crop = model_data['le_crop']
-crop_requirements = model_data['crop_requirements']
+try:
+    model_data = joblib.load('models/crop_model.pkl')
+    model = model_data['model']
+    le_soil = model_data['le_soil']
+    le_season = model_data['le_season']
+    le_region = model_data['le_region']
+    le_crop = model_data['le_crop']
+    crop_requirements = model_data['crop_requirements']
+    print("✅ ML Model loaded successfully")
+except Exception as e:
+    print(f"❌ CRITICAL: ML Model failed to load: {e}")
+    model = None
+    le_soil = le_season = le_region = le_crop = crop_requirements = None
 
 # ---------------- SQLAlchemy Models ----------------
 class User(db.Model):
@@ -146,6 +170,11 @@ def get_image_filename(image_name):
     return 'default.jpg'
 
 # ---------------- Routes ----------------
+@app.route('/health')
+def health():
+    """Health check endpoint for deployment platforms"""
+    return jsonify({"status": "healthy", "service": "AgriPredictor-AI"}), 200
+
 @app.route('/')
 def home():
     return render_template('home.html')
