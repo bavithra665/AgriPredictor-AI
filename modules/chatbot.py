@@ -28,15 +28,20 @@ class AgriBot:
         self.ollama_url = "http://localhost:11434/api/generate"
         self.ollama_model = "llama3.2"
         
-        # Initialize Embedding Model
-        self.embed_model = SentenceTransformer('all-MiniLM-L6-v2')
+        # Initialize Embedding Model (might be slow on first load)
+        try:
+            self.embed_model = SentenceTransformer('all-MiniLM-L6-v2')
+            print("✅ Embedding model loaded")
+        except Exception as e:
+            print(f"⚠️ Embedding model failed: {e}")
+            self.embed_model = None
         
         # Initialize Pinecone
         pc_api_key = os.getenv("PINECONE_API_KEY")
-        if pc_api_key:
-            self.pc = Pinecone(api_key=pc_api_key)
-            self.index_name = "agri-knowledge"
+        if pc_api_key and self.embed_model:
             try:
+                self.pc = Pinecone(api_key=pc_api_key)
+                self.index_name = "agri-knowledge"
                 # Check if index exists - list_indexes() returns a list of index objects
                 existing_indexes = [idx.name for idx in self.pc.list_indexes().indexes]
                 if self.index_name not in existing_indexes:
@@ -47,11 +52,13 @@ class AgriBot:
                         spec=ServerlessSpec(cloud='aws', region='us-east-1')
                     )
                 self.index = self.pc.Index(self.index_name)
+                print("✅ Pinecone initialized")
             except Exception as e:
-                print(f"Pinecone Init Error: {e}")
+                print(f"⚠️ Pinecone init error: {e}")
                 self.index = None
         else:
             self.index = None
+            print("⚠️ Pinecone skipped (no API key or embedding model)")
 
         # Expert Offline Mode Data
         self.offline_knowledge = {
