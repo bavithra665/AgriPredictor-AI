@@ -97,14 +97,15 @@ class AgriBot:
         # Requesting a more detailed, multi-paragraph explanation
         prompt = f"""
         You are a highly detailed and friendly agricultural expert. 
-        Your goal is to provide a comprehensive, multi-paragraph explanation to help the farmer. 
+        Your goal is to provide a comprehensive, medium-length explanation (about 3-4 paragraphs) to help the farmer. 
         Don't just give a short answer; explain the 'why' and give specific actionable tips.
+        Keep it professional but easy to understand for someone working in the field.
         
         Background Information: {context}
         
         User's Question: {query}
         
-        Detailed, casual, and encouraging answer:
+        Medium-length, helpful, and encouraging answer:
         """
         
         # Priority 1: Groq (Recommended for Render)
@@ -140,13 +141,31 @@ class AgriBot:
         # Priority 4: Local Fallbacks (No API keys needed)
         q_lower = query.lower()
         if "rice" in q_lower:
-            return "Rice thrives in clayey soil with high water (1000mm+). Use NPK 80:40:40 for best results."
+            return (
+                "To significantly increase rice production, you should focus on a few key areas:\n\n"
+                "1. **Soil & Climate**: Rice thrives in clayey or loamy soil that can retain water. Ensure a consistent water level of at least 5-10cm during the vegetative stage.\n"
+                "2. **Nutrient Management**: Use a balanced NPK ratio of 80:40:40. It's often beneficial to apply Nitrogen in split doses (at planting, tillering, and panicle initiation).\n"
+                "3. **Improved Varieties**: Use High-Yielding Varieties (HYV) like IR64 or local hybrids suited for your region.\n"
+                "4. **Pest Control**: Keep an eye out for Stem Borers and Leaf Folders. Neem oil can be a great natural preventive measure."
+            )
         if "cotton" in q_lower:
-            return "Cotton needs deep black soil and drip irrigation. Use NPK 100:50:50 and pheromone traps for pests."
+            return (
+                "Boosting cotton yield requires careful moisture and nutrient management:\n\n"
+                "1. **Soil Selection**: Cotton performs best in deep black soils (regur) with good drainage. Avoid waterlogged fields as they cause root rot.\n"
+                "2. **Fertilization**: A recommended NPK dose is 100:50:50 kg/ha. Adding well-decomposed farmyard manure (FYM) during land preparation significantly improves soil texture.\n"
+                "3. **Irrigation**: Use drip irrigation if possible, as it maintains the ideal 'moist but not wet' condition cotton loves.\n"
+                "4. **Pest Management**: Use pheromone traps to monitor Pink Bollworm populations early in the season."
+            )
         if "wheat" in q_lower:
-            return "Wheat is a Rabi crop needing cool weather and NPK 120:60:40. First irrigation at 21 days is critical."
+            return (
+                "Wheat production can be optimized by following these Rabi season best practices:\n\n"
+                "1. **Sowing Time**: Timely sowing (late Oct to mid-Nov) is critical. Every week's delay after Nov 15th can reduce yield by 10%.\n"
+                "2. **Watering Strategy**: Critical stages for irrigation are Crown Root Initiation (CRI) at 21 days after sowing, and the flowering stage.\n"
+                "3. **Balanced Nutrition**: Use NPK 120:60:40. Ensure Zinc application if your soil is deficient, as it helps in grain filling.\n"
+                "4. **Weed Control**: Early weeding (within 30-35 days) ensures that the wheat crop doesn't compete for nutrients with grass weeds."
+            )
         
-        return "I'm currently in lightweight mode. For detailed AI answers, please ensure your API keys are set correctly in the Render environment!"
+        return "I'm currently in lightweight mode. For highly personalized AI answers, please ensure your API keys (especially Groq or Gemini) are correctly set in your .env file or environment variables!"
 
 # Example knowledge seed
 SEED_DATA = [
